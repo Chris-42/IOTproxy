@@ -10,14 +10,14 @@ import select
 from log import log
 
 
-class TCPServer:
+class TCPProxy:
     _socket_list = []
     _forward_dict = {}
     _callback_list = []
     BUFFSIZE = 1024
 
     def __init__(self, listen_ip, listen_port, forward_ip, forward_port, logger = None):
-        self._log = log('TCP Server') if logger is None else logger
+        self._log = log('TCP-Proxy') if logger is None else logger
         self._listen_ip    = listen_ip
         self._forward_ip   = forward_ip
         self._forward_port = forward_port

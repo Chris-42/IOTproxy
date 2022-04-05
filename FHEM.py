@@ -10,7 +10,7 @@ class FHEM:
         else:
             self.__BASEURL = baseURL
         if l == None:
-            self.__log = log('FHEM class', True)
+            self.__log = log('FHEM-class', True)
         else:
             self.__log = l
         self.__session        = requests.session()

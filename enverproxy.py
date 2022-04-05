@@ -2,7 +2,7 @@
 
 import sys
 import os
-from iotproxy import TCPServer
+from iotproxy import TCPProxy
 from log import log
 import configparser
 import signal
@@ -57,7 +57,7 @@ class Enverproxy:
                         forward_ip = r.answers[0]['data']
                         break
                 except DNS.Error:
-                    self._log.logMsg('dns lookup failed ({retries})', log.INFO)
+                    self._log.logMsg(f'dns lookup failed ({retries})', log.INFO)
                 retries += 1
         if forward_ip == False:
             self._log.logMsg('dns lookup failed, using fallback', log.WARN)
@@ -77,11 +77,11 @@ class Enverproxy:
         if log_type == 'syslog':
             log_address = config.get(section, 'log_address', fallback= '127.0.0.1')
             log_port    = int(config.get(section, 'log_port', fallback= 514))
-            self._log   = log('Envertec Proxy', log_level, log_type, log_address, log_port)
+            self._log   = log('EnverProxy', log_level, log_type, log_address, log_port)
         else:
             self._log.logMsg(f'set log to {log_type} {log_level}', log.INFO)
-            self._log   = log('Envertec Proxy', log_level, log_type)
-        self._iotserver = TCPServer(listen_ip, listen_port, forward_ip, forward_port, self._log)
+            self._log   = log('EnverProxy', log_level, log_type)
+        self._iotserver = TCPProxy(listen_ip, listen_port, forward_ip, forward_port, self._log)
         self._iotserver.set_forward_timeout(forward_timeout)
         if 'mqtt' in config:
             section = 'mqtt'

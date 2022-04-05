@@ -7,8 +7,11 @@ decoding Initially taken from thread in FHEM forum:
 https://forum.fhem.de/index.php?topic=61867.0
 
 Added code to work with mqtt
+fhem is not tested.
 
-call is enverproxy.y [-c <configfile>]
+packages pydns and paho.mqtt.client are needed
+
+call is enverproxy.py [-c <configfile>]
   default config is /etc/enverproxy.conf
 
   you can configure fhem and/or mqtt to send the status of your inverters to.
@@ -17,7 +20,17 @@ call is enverproxy.y [-c <configfile>]
   if there is no contact to envertecportal the measurements are still send to smarthome hub.
   
   setup is done by configuring a local dns entry in your local DNS server like pihole or fritzbox www.envertecportal.com pointing to this proxy server. The server is looking up the real ip of envertecportal at startup (default at 8.8.8.8) and forwarding all data traffic to this server. It's also possible to add a fallback ip if dns lookup fails.
-  
+
+Install:
+  copy enverproxy.conf to /etc/ (or adapt enverproxy.service to use -c argument)
+  copy the whole directory to i.e. /usr/local/sbin (if you use a different location you have to adapt enverproxy.service)
+  copy enverproxy.service to /etc/systemd/system/
+  systemctl enable enverproxy.service
+  systemctl start enverproxy.service
+
+
+
+
 known part of the protocol:
 
 each packet has some kind of checksum at the end, calculation unknown (yy16)

@@ -4,7 +4,6 @@ After=syslog.target network-online.target
 
 [Service]
 Type=simple
-User=fhem
 ExecStart=/usr/local/sbin/IOTproxy/enverproxy.py
 Restart=on-failure
 RestartSec=10
