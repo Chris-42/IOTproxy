@@ -63,7 +63,14 @@ class log:
     def logMsg (self, msg, level = 3, cat = None):
         # Only write to log if level <= verbosity
         if level <= self._verbosity:
-            self._logger.log(self.level_to_category(level), msg)
+            if self._type == 'syslog' and len(msg) > 512:
+                self._logger.log(self.level_to_category(level), msg[:512])
+                p = 1
+                while len(msg) > p * 512:
+                    self._logger.log(self.level_to_category(level), f' . {msg[p*512:p*512+512]}')
+                    p += 1
+            else:
+                self._logger.log(self.level_to_category(level), msg)
             
     def set_verbosity(self, verbosity):
         if verbosity < 1:

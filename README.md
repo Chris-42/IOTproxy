@@ -46,7 +46,7 @@ client commands:
 
   6803d6681004 - inverter data
     
-    # cmd          account  ?id?     unknown      inverter0[32] .. inverter39[32] crc?
+    # cmd          account  ?id?     unknown      inverter0[32] .. inverter29[32] crc?
     # --------------------------------------------------------------------------------
     # 6803d6681004 yyyyyyyy iiiiiiii 000000000000 xxxxxxxx  ...                   xx16
     

@@ -72,7 +72,11 @@ class Enverproxy:
         forward_port = int(config.get(section, 'forward_port', fallback= listen_port))
         forward_timeout = int(config.get(section, 'forward_timeout', fallback= 10))
         section = 'log'
-        log_level   = int(config.get(section, 'log_level', fallback= log.WARN))
+        log_level   = config.get(section, 'log_level', fallback= log.WARN)
+        self._log_hex = False
+        if log_level == '4.5':
+            self._log_hex = True
+        log_level   = int(float(log_level))
         log_type    = config.get(section, 'log_type', fallback= 'sys.stdout')
         if log_type == 'syslog':
             log_address = config.get(section, 'log_address', fallback= '127.0.0.1')
@@ -177,14 +181,24 @@ class Enverproxy:
         self._log.logMsg(f'callback for {data_type}data ({len(data)})', log.DEBUG)
         if data_type == 'client':
             if data[:6].hex() == '680030681006':
-                self._log.logMsg('ClientPoll as hex: ' + str(data[10:].hex()), log.INFO)
+                if self._log_hex:
+                    self._log.logMsg(f'ClientPoll as hex: {data[10:].hex()}', log.INFO)
             elif data[:6].hex() == '6803d6681004':
                 # payload from converter
-                self._log.logMsg('ClientMonData as hex: ' + str(data[10:].hex()), log.INFO)
+                if self._log_hex:
+                    # count filled inverter blocks
+                    p = 2
+                    zerocount = 0
+                    print(f'p: {p} d: {data[-(p+32):-p].hex()}')
+                    while int.from_bytes(data[-(p+32):-p], 'big') == 0:
+                        zerocount += 1
+                        p += 32
+                        print(f' p: {p} d: {data[-(p+32):-p].hex()}')
+                    self._log.logMsg(f'ClientMonData as hex: {data[10:-p].hex()} {zerocount} empty {data[-2:]}', log.INFO)
                 self.process_data(data[20:])
             else:
-                self._log.logMsg('Client sent message with unknown content and length ' + str(len(data)), log.WARN)
-                self._log.logMsg('unknown Clientdata as hex: ' + str(data.hex()), 3)
+                self._log.logMsg(f'Client sent message with unknown content and length {len(data)}', log.WARN)
+                self._log.logMsg(f'unknown Clientdata as hex: {data.hex()}', 3)
         else: # server data
             if data[:6].hex() == '680030681007': # on remote brigge command
                 # -------------------------------------------------------------------------------------------
@@ -192,29 +206,36 @@ class Enverproxy:
                 # -------------------------------------------------------------------------------------------
                 # 680030681007 yyyyyyyy 00000000 0200 0010 0223 0002 1870 3021 28b8 1103 00006a6e 1ee6 3a80 3204 000000000000 5816
                 # cmd 1103  -> reboot?
-                self._log.logMsg(f"Bridgecmd {data[28:30].hex()} raw: " + str(data[10:].hex()), log.INFO)
+                if self._log_hex:
+                    self._log.logMsg(f'Bridgecmd hex: {data[10:].hex()}', log.INFO)
+                self._log.logMsg(f'Bridgecmd {data[28:30].hex()}', log.INFO)
             elif data[:6].hex() == '680020681027':
                 # -------------------------------------------------------------------------------------------
                 # cmd          account  power    date                                        crc?
                 # -------------------------------------------------------------------------------------------
                 # 680020681027 yyyyyyyy 00000345 HHMMmmdd 0000 0000 0000 0000 0000 0000 0000 xx16
+                if self._log_hex:
+                    self._log.logMsg(f'Serverdate hex: {data[10:].hex()}', log.INFO)
                 power     = int.from_bytes(data[10:14],"big")
-                self._log.logMsg(f"Serverdate {data[17]:02d}.{data[16]:02d}. {data[14]:02d}:{data[15]:02d} [{power/100:.2f}kWh] remain " + str(data[18:32].hex()), log.INFO)
+                self._log.logMsg(f'Serverdate {data[17]:02d}.{data[16]:02d}. {data[14]:02d}:{data[15]:02d} [{power/100:.2f}kWh] remain {data[18:32].hex()}', log.INFO)
             elif data[:6].hex() == '680012681015':
                 # -------------------------------------------------------------------------------------------
                 # cmd          account  ?id?          crc?
                 # -------------------------------------------------------------------------------------------
                 # 680012681015 yyyyyyyy 1402070d 0000 a116
+                if self._log_hex:
+                    self._log.logMsg(f'Serverack hex: {data[10:].hex()}', log.INFO)
                 self._log.logMsg("Server ack " + str(data[10:16].hex()), log.INFO)
             elif data[:6].hex() == '68001e681070':
                 # -------------------------------------------------------------------------------------------
                 # cmd          account  power    ?  date                                crc?
                 # -------------------------------------------------------------------------------------------
                 # 68001e681070 yyyyyyyy 00000000 7a mmddHHMMSS 0000 0000 0000 0000 0000 xx16
-                self._log.logMsg(f"Servertime(China) {data[16]:02d}.{data[15]:02d}. {data[17]:02d}:{data[18]:02d}:{data[19]:02d} {data[14]:02x}({data[14]}) remain "
-                                   + str(data[10:14].hex()) + " " + str(data[20:30].hex()), log.INFO)
+                if self._log_hex:
+                    self._log.logMsg(f'Servertime hex: {data[10:].hex()}', log.INFO)
+                self._log.logMsg(f'Servertime(China) {data[16]:02d}.{data[15]:02d}. {data[17]:02d}:{data[18]:02d}:{data[19]:02d} {data[14]:02x}({data[14]}) remain {data[10:14].hex()} {data[20:30].hex()}', log.INFO)
             else:
-                self._log.logMsg('unknown Serverdata as hex: ' + str(data.hex()), log.WARN)            
+                self._log.logMsg(f'unknown Serverdata as hex: {data.hex()}', log.WARN)            
         return data
 
     def run(self):
