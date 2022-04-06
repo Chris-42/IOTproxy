@@ -194,7 +194,7 @@ class Enverproxy:
                         zerocount += 1
                         p += 32
                         print(f' p: {p} d: {data[-(p+32):-p].hex()}')
-                    self._log.logMsg(f'ClientMonData as hex: {data[10:-p].hex()} {zerocount} empty {data[-2:]}', log.INFO)
+                    self._log.logMsg(f'ClientMonData as hex: {data[10:-p].hex()} {zerocount} empty {data[-2:].hex()}', log.INFO)
                 self.process_data(data[20:])
             else:
                 self._log.logMsg(f'Client sent message with unknown content and length {len(data)}', log.WARN)
