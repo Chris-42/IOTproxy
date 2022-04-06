@@ -46,9 +46,10 @@ client commands:
 
   6803d6681004 - inverter data
     
-    # cmd          account  ?id?     unknown      inverter0[32] .. inverter29[32] crc?
+    # cmd          account  TypeVer? unknown      inverter0[32] .. inverter29[32] crc?
     # --------------------------------------------------------------------------------
-    # 6803d6681004 yyyyyyyy iiiiiiii 000000000000 xxxxxxxx  ...                   xx16
+    # 6803d6681004 yyyyyyyy 1402070d 000000000000 xxxxxxxx  ...                   xx16
+      Typever maybe ebridge202 V7.13 
     
       for each inverter:    
       # Information from bytearray of one inverter (length is 32 bytes)
@@ -71,10 +72,9 @@ server commands:
 
   680012681015 - Server ack for measurement data
     # -------------------------------------------------------------------------------------------
-    # cmd          account  ?id?          crc?
+    # cmd          account  TypeVer?      crc?
     # -------------------------------------------------------------------------------------------
-    # 680012681015 yyyyyyyy iiiiiiii 0000 a116
-      ?id? is the same as sent in inverter data packet
+    # 680012681015 yyyyyyyy 1402070d 0000 a116
 
   680030681007 - on remote brigge command
     # -------------------------------------------------------------------------------------------
