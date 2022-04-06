@@ -189,11 +189,9 @@ class Enverproxy:
                     # count filled inverter blocks
                     p = 2
                     zerocount = 0
-                    print(f'p: {p} d: {data[-(p+32):-p].hex()}')
                     while int.from_bytes(data[-(p+32):-p], 'big') == 0:
                         zerocount += 1
                         p += 32
-                        print(f' p: {p} d: {data[-(p+32):-p].hex()}')
                     self._log.logMsg(f'ClientMonData as hex: {data[10:-p].hex()} {zerocount} empty {data[-2:].hex()}', log.INFO)
                 self.process_data(data[20:])
             else:
