@@ -158,21 +158,23 @@ class Enverproxy:
         
         pos = 0
         wrid = data[pos:pos+4].hex()
-        while wrid != '00000000':
-            status = data[pos+4:pos+6].hex()
-            dc = '{0:.2f}'.format(int.from_bytes(data[pos+6:pos+8],"big") / 512)
-            power = '{0:.2f}'.format(int.from_bytes(data[pos+8:pos+10],"big") / 64)
-            total = '{0:.2f}'.format(int.from_bytes(data[pos+10:pos+14],"big") / 8192)
-            temp = '{0:.2f}'.format(int.from_bytes(data[pos+14:pos+16],"big") / 128 - 40)
-            ac = '{0:.2f}'.format(int.from_bytes(data[pos+16:pos+18],"big") / 64)
-            freq = '{0:.2f}'.format(int.from_bytes(data[pos+18:pos+20],"big") / 256)
-            remaining = data[pos+20:pos+32].hex()
-            if status == '3021':
-                result = {'wrid' : wrid, 'status' : status, 'dc' : dc, 'power' : power, 'totalkwh' : total, 'temp' : temp, 'ac' : ac, 'freq' : freq, 'remaining' : remaining}
-            else:
-                result = {'wrid' : wrid, 'status' : status, 'ac' : ac, 'freq' : freq, 'remaining' : remaining}
-            self._log.logMsg(result, log.INFO)
-            self.publish_data(result)
+        #while wrid != '00000000':
+        while pos < len(data):
+            if wrid != '00000000':
+                status = data[pos+4:pos+6].hex()
+                dc = '{0:.2f}'.format(int.from_bytes(data[pos+6:pos+8],"big") / 512)
+                power = '{0:.2f}'.format(int.from_bytes(data[pos+8:pos+10],"big") / 64)
+                total = '{0:.2f}'.format(int.from_bytes(data[pos+10:pos+14],"big") / 8192)
+                temp = '{0:.2f}'.format(int.from_bytes(data[pos+14:pos+16],"big") / 128 - 40)
+                ac = '{0:.2f}'.format(int.from_bytes(data[pos+16:pos+18],"big") / 64)
+                freq = '{0:.2f}'.format(int.from_bytes(data[pos+18:pos+20],"big") / 256)
+                remaining = data[pos+20:pos+32].hex()
+                if status == '3021':
+                    result = {'wrid' : wrid, 'status' : status, 'dc' : dc, 'power' : power, 'totalkwh' : total, 'temp' : temp, 'ac' : ac, 'freq' : freq, 'remaining' : remaining}
+                else:
+                    result = {'wrid' : wrid, 'status' : status, 'ac' : ac, 'freq' : freq, 'remaining' : remaining}
+                self._log.logMsg(result, log.INFO)
+                self.publish_data(result)
             pos += 32
             wrid = data[pos:pos+4].hex()
  
@@ -180,9 +182,14 @@ class Enverproxy:
     def data_cb(self, data_type, data):
         self._log.logMsg(f'callback for {data_type}data ({len(data)})', log.DEBUG)
         if data_type == 'client':
+            
             if data[:6].hex() == '680030681006':
                 if self._log_hex:
                     self._log.logMsg(f'ClientPoll as hex: {data[10:].hex()}', log.INFO)
+            elif data[:6].hex() == '680030681010':
+                self._log.logMsg(f'ClientWridAck', log.INFO)
+                if self._log_hex:
+                    self._log.logMsg(f'ClientAck as hex: {data[10:].hex()}', log.INFO)
             elif data[:6].hex() == '6803d6681004':
                 # payload from converter
                 if self._log_hex:
@@ -193,7 +200,7 @@ class Enverproxy:
                         zerocount += 1
                         p += 32
                     self._log.logMsg(f'ClientMonData as hex: {data[10:-p].hex()} {zerocount} empty {data[-2:].hex()}', log.INFO)
-                self.process_data(data[20:])
+                self.process_data(data[20:-2])
             else:
                 self._log.logMsg(f'Client sent message with unknown content and length {len(data)}', log.WARN)
                 self._log.logMsg(f'unknown Clientdata as hex: {data.hex()}', 3)
@@ -207,6 +214,14 @@ class Enverproxy:
                 if self._log_hex:
                     self._log.logMsg(f'Bridgecmd hex: {data[10:].hex()}', log.INFO)
                 self._log.logMsg(f'Bridgecmd {data[28:30].hex()}', log.INFO)
+            elif data[:6].hex() == '680020681009':
+                # -------------------------------------------------------------------------------------------
+                # cmd          account  ?        ?            wrid 1   wrid 2   wrid 3   crc?
+                # -------------------------------------------------------------------------------------------
+                # 680020681009 yyyyyyyy 00000000 000000000000 wwwwwwww wwwwwwww wwwwwwww 0a16
+                if self._log_hex:
+                    self._log.logMsg(f'ServerSetWrids hex: {data[10:].hex()}', log.INFO)
+                self._log.logMsg(f'ServerSetWrids {data[20:-2].hex()}', log.INFO)
             elif data[:6].hex() == '680020681027':
                 # -------------------------------------------------------------------------------------------
                 # cmd          account  power    date                                        crc?

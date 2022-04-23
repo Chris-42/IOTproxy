@@ -44,12 +44,18 @@ client commands:
     # 680030681006 yyyyyyyy 00000000 0200 0010 0223 0002wwww 3021 297c 1a22 pppppppp 238c 3a5f 3200 000000000000 xx16
       on poll after a submission of inverter data the part after byte 22 seems to contain the content of the last measurement packet
 
+  680030681010 - change monitored wrid's ack
+    # cmd          account  unknown                    (wid2 stat dc   act  totalkWh temp ac   freq            ) crc?
+    # ---------------------------------------------------------------------------------------------------------------
+    # 680030681010 yyyyyyyy 00000000 0200 0010 0223 0002wwww 3021 2fd9 001d 0003677e 1fd9 3a28 31fd 020000000000 3916
+      filled data same as on poll
+
   6803d6681004 - inverter data
-    
     # cmd          account  TypeVer? unknown      inverter0[32] .. inverter29[32] crc?
     # --------------------------------------------------------------------------------
     # 6803d6681004 yyyyyyyy 1402070d 000000000000 xxxxxxxx  ...                   xx16
       Typever maybe ebridge202 V7.13 
+      there may enpty inverter blocks in the middle!
     
       for each inverter:    
       # Information from bytearray of one inverter (length is 32 bytes)
@@ -95,3 +101,11 @@ server commands:
     # cmd          account  ?        ?  date                                crc?
     # -------------------------------------------------------------------------------------------
     # 68001e681070 yyyyyyyy 00000000 7a mmddHHMMSS 0000 0000 0000 0000 0000 xx16
+
+  680020681009 - change monitored wrid's
+    # -------------------------------------------------------------------------------------------
+    # cmd          account  ?        ?            wrid 1   wrid 2   wrid 3   crc?
+    # -------------------------------------------------------------------------------------------
+    # 680020681009 yyyyyyyy 00000000 000000000000 wwwwwwww wwwwwwww wwwwwwww 0a16
+
+
